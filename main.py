@@ -15,7 +15,7 @@ class Highlight(Enum):
 	WRONG = 1
 	UPCOMING = 2
 
-def get_layout() -> str:
+def getLayout() -> str:
 	layout = ctypes.windll.user32.GetKeyboardLayout(0)
 	# 67699721 -> en
 	# 68748313 -> ru
@@ -33,7 +33,7 @@ class Window(QMainWindow):
 
 		# Set up words
 		window_width, window_height = int(width * 0.6), 400
-		self.current_words = self.get_words(self.sample_size)
+		self.current_words = self.getWords(self.sample_size)
 
 		# Set up window
 		self.setWindowOpacity(0.9)
@@ -90,13 +90,13 @@ class Window(QMainWindow):
 
 	def reset(self) -> None:
 		self.current_index = 0
-		self.current_words = self.get_words(10)
+		self.current_words = self.getWords(10)
 		self.current_word = self.current_words[0]
 		self.label.setText(self.prepareText(self.current_words, 0, Highlight.UPCOMING))
 		self.textbox.clear()
 
-	def get_words(self, size: int) -> list[str]:
-		lang = get_layout()
+	def getWords(self, size: int) -> list[str]:
+		lang = getLayout()
 		if lang  == 'en':
 			return random.sample(english_words, size)
 		return random.sample(russian_words, size)
