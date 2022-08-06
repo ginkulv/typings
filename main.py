@@ -9,7 +9,7 @@ english_words = ["a", "about", "all", "also", "and", "as", "at", "be", "because"
 russian_words = [ "и", "в", "не", "он", "на", "я", "что", "тот", "быть", "с", "а", "весь", "это", "как", "она", "по", "но", "они", "к", "у", "ты", "из", "мы", "за", "вы", "так", "же", "от", "сказать", "этот", "который", "мочь", "человек", "о", "один", "еще", "бы", "такой", "только", "себя", "свое", "какой", "когда", "уже", "для", "вот", "кто", "да", "говорить", "год", "знать", "мой", "до", "или", "если", "время", "рука", "нет", "самый", "ни", "стать", "большой", "даже", "другой", "наш", "свой", "ну", "под", "где", "дело", "есть", "сам", "раз", "чтобы", "два", "там", "чем", "глаз", "жизнь", "первый", "день", "тута", "во", "ничто", "потом", "очень", "со", "хотеть", "ли", "при", "голова", "надо", "без", "видеть", "идти", "теперь", "тоже", "стоять", "друг", "дом", "сейчас", "можно", "после", "слово", "здесь", "думать", "место", "спросить", "через", "лицо", "что", "тогда", "ведь", "хороший", "каждый", "новый", "жить", "должный", "смотреть", "почему", "потому", "сторона", "просто", "нога", "сидеть", "понять", "иметь", "конечный", "делать", "вдруг", "над", "взять", "никто", "сделать", "дверь", "перед", "нужный", "понимать", "казаться", "работа", "три", "ваш", "уж", "земля", "конец", "несколько", "час", "голос", "город", "последний", "пока", "хорошо", "давать", "вода", "более", "хотя", "всегда", "второй", "куда", "пойти", "стол", "ребенок", "увидеть", "сила", "отец", "женщина", "машина", "случай", "ночь", "сразу", "мир", "совсем", "остаться", "об", "вид", "выйти", "дать", "работать", "любить", "старый", "почти", "ряд", "оказаться", "начало", "твой", "вопрос", "много", "война", "снова", "ответить", "между", "подумать", "опять", "белый", "деньги", "значить", "про", "лишь", "минута", "жена", "посмотреть", "правда", "главный", "страна", "свет", "ждать", "мать", "будто", "никогда", "товарищ", "дорога", "однако", "лежать", "именно", "окно", "никакой", "найти", "писать", "комната", "москва", "часть", "вообще", "книга", "маленький", "улица", "решить", "далекий", "душа", "чуть", "вернуться", "утро", "некоторый", "считать", "сколько", "помнить", "вечер", "пол", "таки", "получить", "народ", "плечо", "хоть", "сегодня", "бог", "вместе", "взгляд", "ходить", "зачем", "советский", "русский", "бывать", "полный", "прийти", "палец", "россия", "любой", "история", "наконец", "мысль", "узнать", "назад", "общий", "заметить", "словно"]
 
 def get_layout() -> str:
-	layout=ctypes.windll.user32.GetKeyboardLayout(0)
+	layout = ctypes.windll.user32.GetKeyboardLayout(0)
 	# 67699721 -> en
 	# 68748313 -> ru
 	if layout == 67699721:
@@ -21,7 +21,6 @@ def get_layout() -> str:
 class Window(QMainWindow):
 	current_index = 0
 	current_words = []
-	current_word = ''
 	sample_size = 10
 
 	def __init__(self, width, height):
@@ -29,13 +28,15 @@ class Window(QMainWindow):
 
 		window_width, window_height = int(width * 0.6), 400
 
+		self.current_words = self.get_words(self.sample_size)
+
 		self.setWindowOpacity(0.9)
 
 		self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
 
 		self.setGeometry(int(width * 0.2), height // 2, window_width, window_height)
 
-		self.label = QLabel(self.prepareText(self.get_words(self.sample_size), -1, True), self)
+		self.label = QLabel(self.prepareText(self.current_words, -1, True), self)
 		# self.label = QLabel('word <b style="color: #0000FF;">word</b>', self)
 		self.label.setFont(QFont('Hack NF'))
 		self.label.move(150, 200)
@@ -61,14 +62,14 @@ class Window(QMainWindow):
 	def processInput(self, text: str) -> None:
 		if not text:
 			return	
+		if text[-1] == ' ' and self.current_index >= len(self.current_words):
+			self.textbox.clear()
+			return
 		if text[-1] == ' ':
-			is_right = text[:-1] == self.current_word
+			is_right = text[:-1] == self.current_words[self.current_index]
 			self.label.setText(self.prepareText(self.current_words, self.current_index, is_right))
 			self.textbox.clear()
 			self.current_index += 1
-			if self.current_index >= len(self.current_words):
-				return
-			self.current_word = self.current_words[self.current_index]
 
 	def prepareText(self, arr: list[str], index: int, is_right: bool) -> str:
 		if index < 0: return ' '.join(arr)
@@ -88,15 +89,13 @@ class Window(QMainWindow):
 		self.current_words = self.get_words(10)
 		self.current_word = self.current_words[0]
 		self.label.setText(self.prepareText(self.current_words, -1, True))
+		self.textbox.clear()
 
 	def get_words(self, size: int) -> list[str]:
 		lang = get_layout()
-		if lang  =='en':
+		if lang  == 'en':
 			return random.sample(english_words, size)
 		return random.sample(russian_words, size)
-
-
-
 
 if __name__ == '__main__':
 	app = QApplication([])
